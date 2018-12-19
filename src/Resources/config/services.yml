@@ -1,0 +1,4 @@
+services:
+  ics.export.datacontainer:
+    class: Alnv\CatalogManagerIcsExportBundle\DataContainer\Module
+    public: true
