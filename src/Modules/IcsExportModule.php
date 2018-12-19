@@ -71,6 +71,7 @@ class IcsExportModule extends \Module {
 
     protected function compile() {
 
+        $this->Template->button = $GLOBALS['TL_LANG']['MSC']['icsExportButton'];
         $this->Template->active = $this->blnActiveExport;
         $this->Template->token = $this->strToken;
     }
