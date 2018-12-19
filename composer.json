@@ -1,6 +1,6 @@
 {
   "name": "alnv/catalog-manager-ics-export",
-  "description": "This extension allow iCal (.ics) Export for Catalog Manager.",
+  "description": "This extension allow iCal (.ics) export for Catalog Manager.",
   "type": "contao-bundle",
   "license": "proprietary",
   "authors": [
