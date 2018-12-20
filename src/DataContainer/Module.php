@@ -24,8 +24,8 @@ class Module {
         if ( $objActiveRecord->type == 'icsExport' ) {
 
             $GLOBALS['TL_DCA']['tl_module']['subpalettes']['catalogUseMasterPage'] = 'catalogMasterPage';
-            $GLOBALS['TL_DCA']['tl_module']['fields']['']['label'] =
             $GLOBALS['TL_DCA']['tl_module']['fields']['catalogJoinFields']['options_callback'] = [ 'ics.export.datacontainer', 'getJoinAbleFields' ];
+            $GLOBALS['TL_DCA']['tl_module']['fields']['catalogActiveParameters']['label'] = $GLOBALS['TL_LANG']['tl_module']['icsExportActiveParameters'];
         }
     }
 

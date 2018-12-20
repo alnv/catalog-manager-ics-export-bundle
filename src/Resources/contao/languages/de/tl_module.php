@@ -8,4 +8,4 @@ $GLOBALS['TL_LANG']['tl_module']['catalogUrlField'] = [ 'URL', 'Hier können Sie
 $GLOBALS['TL_LANG']['tl_module']['catalogNameField'] = [ 'Titel', 'Hier können Sie den Titel eingeben. Sie können über die SimpleTokens auf die Feldwerte zugreifen z.B ##title##.' ];
 $GLOBALS['TL_LANG']['tl_module']['catalogDescriptionField'] = [ 'Beschreibung', 'Hier können Sie die Beschreibung eingeben. Sie können über die SimpleTokens auf die Feldwerte zugreifen z.B ##title##.' ];
 $GLOBALS['TL_LANG']['tl_module']['catalogLocationField'] = [ 'Veranstaltungsort', 'Hier können Sie den Namen des Veranstaltungsortes eingeben. Sie können über die SimpleTokens auf die Feldwerte zugreifen z.B ##title##.' ];
-$GLOBALS['TL_LANG']['tl_module']['catalogActiveParameters'] = [ 'Abhängigkeit', 'Hier können Sie einen oder mehrere Feldnamen eintragen (komma getrennt), welche zuerst gesetzt werden müssen, bevor der Export möglich ist.'];
+$GLOBALS['TL_LANG']['tl_module']['icsExportActiveParameters'] = [ 'Abhängigkeit', 'Hier können Sie einen oder mehrere Feldnamen eintragen (komma getrennt), welche zuerst gesetzt werden müssen, bevor der Export möglich ist.'];
