@@ -58,8 +58,16 @@ class IcsExportModule extends \Module {
 
         if ( \Input::post( 'ICS_DOWNLOAD' ) == $this->strToken && $this->blnActiveExport ) {
 
+            $strFilename = $objPage->alias;
+
+            if ( $this->catalogICalFileName ) {
+
+                $strFilename = \Controller::replaceInsertTags( $this->catalogICalFileName );
+                $strFilename = \StringUtil::standardize( $strFilename, false );
+            }
+
             header('Content-type: text/calendar; charset=utf-8');
-            header('Content-Disposition: attachment; filename='. $objPage->alias .'.ics');
+            header('Content-Disposition: attachment; filename='. $strFilename .'.ics');
 
             echo $this->createIcsFile();
             exit;
@@ -116,7 +124,6 @@ class IcsExportModule extends \Module {
                 'DESCRIPTION:' => $this->getSimpleTokenValue( 'catalogDescriptionField', $arrEntity ),
                 'UID:' => md5( $arrEntity['id'] ),
                 'END:VEVENT' => ''
-
             ];
 
             if ( $intEndDate ) {
