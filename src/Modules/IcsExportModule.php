@@ -2,15 +2,12 @@
 
 namespace Alnv\CatalogManagerIcsExportBundle\Modules;
 
-
 class IcsExportModule extends \Module {
-
 
     protected $strToken = null;
     protected $arrEntities = [];
     protected $blnActiveExport = true;
     protected $strTemplate = 'mod_ics_export';
-
 
     public function generate() {
 
@@ -76,14 +73,12 @@ class IcsExportModule extends \Module {
         return parent::generate();
     }
 
-
     protected function compile() {
 
         $this->Template->button = $GLOBALS['TL_LANG']['MSC']['icsExportButton'];
         $this->Template->active = $this->blnActiveExport;
         $this->Template->token = $this->strToken;
     }
-
 
     protected function setEntities() {
 
@@ -100,36 +95,34 @@ class IcsExportModule extends \Module {
         $this->arrEntities = $objView->getCatalogView( [ 'where' => [], 'orderBy' => [] ] );
     }
 
-
     protected function createIcsFile() {
 
         $arrIcsData = [];
         $this->setEntities();
 
-        foreach ( $this->arrEntities as $arrEntity ) {
+        foreach ($this->arrEntities as $arrEntity) {
 
-            $intStartDate = $this->getDate( 'catalogStartDateField', $arrEntity );
-            $intEndDate = $this->getDate( 'catalogEndDateField', $arrEntity );
+            $intStartDate = $this->getDate('catalogStartDateField', $arrEntity, 'dayBegin');
+            $intEndDate = $this->getDate('catalogEndDateField', $arrEntity, 'dayEnd');
 
             if ( !$intStartDate ) continue;
 
-            $arrIcsData[] = [
-
+            $arrData = [
                 'BEGIN:VEVENT' => '',
                 'DTSTART:' => $intStartDate,
-                'LOCATION:' => $this->getSimpleTokenValue( 'catalogLocationField', $arrEntity ),
-                'DTSTAMP:' => date( 'Ymd\THis', time() ),
-                'SUMMARY:' => $this->getSimpleTokenValue( 'catalogNameField', $arrEntity ),
-                'URL;VALUE=URI:' => $this->getSimpleTokenValue( 'catalogUrlField', $arrEntity ),
-                'DESCRIPTION:' => $this->getSimpleTokenValue( 'catalogDescriptionField', $arrEntity ),
-                'UID:' => md5( $arrEntity['id'] ),
-                'END:VEVENT' => ''
+                'LOCATION:' => $this->getSimpleTokenValue('catalogLocationField', $arrEntity),
+                'DTSTAMP:' => date('Ymd\THis', time()),
+                'SUMMARY:' => $this->getSimpleTokenValue('catalogNameField', $arrEntity),
+                'URL;VALUE=URI:' => $this->getSimpleTokenValue('catalogUrlField', $arrEntity),
+                'DESCRIPTION:' => $this->getSimpleTokenValue('catalogDescriptionField', $arrEntity),
+                'UID:' => md5($arrEntity['id']),
             ];
-
-            if ( $intEndDate ) {
-
+            if ($intEndDate) {
                 $arrIcsData['DTEND:'] = $intEndDate;
             }
+            $arrData['END:VEVENT'] = '';
+
+            $arrIcsData[] = $arrData;
         }
 
         $strFile =
@@ -137,10 +130,8 @@ class IcsExportModule extends \Module {
             "VERSION:2.0" . "\r\n".
             "PRODID://catalog_manager//catalog_manager.org//DE" . "\r\n";
 
-        foreach ( $arrIcsData as $arrIcs ) {
-
-            foreach ( $arrIcs as $strType => $strValue ) {
-
+        foreach ($arrIcsData as $arrIcs) {
+            foreach ($arrIcs as $strType => $strValue) {
                 $strFile .= $strType . $strValue . "\r\n";
             }
         }
@@ -150,28 +141,29 @@ class IcsExportModule extends \Module {
         return $strFile;
     }
 
+    private function getDate($strField, $arrEntity, $strType) {
 
-    private function getDate( $strField, $arrEntity ) {
-
-        $strDate = $arrEntity[ $this->{$strField} ] ?: '';
-
-        if ( $strDate ) {
-
-            $objDate = new \Date( $strDate );
-
-            return date( 'Ymd\THis', $objDate->tstamp );
+        $strDate = $arrEntity[$this->{$strField}] ?: '';
+        if (!$strDate) {
+            return '';
         }
-
+        if (\Validator::isDate($strDate)) {
+            $objDate = new \Date($strDate);
+            return date('Ymd\THis', ($objDate->{$strType}+5400));
+        }
+        if (\Validator::isDatim($strDate)) {
+            $objDate = new \Date($strDate);
+            return date('Ymd\THis', $objDate->tstamp);
+        }
         return '';
     }
 
-
-    private function getSimpleTokenValue( $strField, $arrEntity ) {
+    private function getSimpleTokenValue($strField, $arrEntity) {
 
         $strToken = $this->{$strField} ?: '';
 
         if ( !$strToken ) return '';
 
-        return \StringUtil::parseSimpleTokens( $strToken, $arrEntity );
+        return \StringUtil::parseSimpleTokens($strToken, $arrEntity);
     }
 }
