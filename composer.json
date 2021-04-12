@@ -26,6 +26,7 @@
   },
   "require": {
     "php":">=7.1",
+    "eluceo/ical": "^2.0",
     "contao/core-bundle":"~4.4",
     "alnv/catalog-manager":"~1.28"
   },

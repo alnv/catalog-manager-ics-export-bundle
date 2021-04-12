@@ -2,6 +2,8 @@
 
 namespace Alnv\CatalogManagerIcsExportBundle\Modules;
 
+use function Clue\StreamFilter\remove;
+
 class IcsExportModule extends \Module {
 
     protected $strToken = null;
@@ -36,18 +38,13 @@ class IcsExportModule extends \Module {
         $arrActiveParams = explode( ',', $this->catalogActiveParameters );
 
         if ( is_array( $arrActiveParams ) && !empty( $arrActiveParams ) ) {
-
             foreach ( $arrActiveParams as $strParameter ) {
-
                 if ( \CatalogManager\Toolkit::isEmpty( $strParameter ) ) {
-
                     continue;
                 }
 
                 if ( \CatalogManager\Toolkit::isEmpty( $this->CatalogInput->getActiveValue( $strParameter ) ) ) {
-
                     $this->blnActiveExport = false;
-
                     break;
                 }
             }
@@ -63,8 +60,8 @@ class IcsExportModule extends \Module {
                 $strFilename = \StringUtil::standardize( $strFilename, false );
             }
 
-            header('Content-type: text/calendar; charset=utf-8');
-            header('Content-Disposition: attachment; filename='. $strFilename .'.ics');
+            header('Content-Type: text/calendar; charset=utf-8');
+            header('Content-Disposition: attachment; filename="'.$strFilename.'.ics"');
 
             echo $this->createIcsFile();
             exit;
@@ -102,60 +99,56 @@ class IcsExportModule extends \Module {
 
         foreach ($this->arrEntities as $arrEntity) {
 
-            $intStartDate = $this->getDate('catalogStartDateField', $arrEntity, 'dayBegin');
-            $intEndDate = $this->getDate('catalogEndDateField', $arrEntity, 'dayEnd');
+            $strStart = $arrEntity[$this->catalogStartDateField];
+            $strEnd = $arrEntity[$this->catalogEndDateField];
 
-            if ( !$intStartDate ) continue;
+            if (!$strStart) continue;
 
-            $arrData = [
-                'BEGIN:VEVENT' => '',
-                'DTSTART:' => $intStartDate,
-                'LOCATION:' => $this->getSimpleTokenValue('catalogLocationField', $arrEntity),
-                'DTSTAMP:' => date('Ymd\THis', time()),
-                'SUMMARY:' => $this->getSimpleTokenValue('catalogNameField', $arrEntity),
-                'URL;VALUE=URI:' => $this->getSimpleTokenValue('catalogUrlField', $arrEntity),
-                'DESCRIPTION:' => $this->getSimpleTokenValue('catalogDescriptionField', $arrEntity),
-                'UID:' => md5($arrEntity['id']),
-            ];
-            if ($intEndDate) {
-                $arrIcsData['DTEND:'] = $intEndDate;
+            $strLocation = $this->getSimpleTokenValue('catalogLocationField', $arrEntity);
+            $strSummary = $this->getSimpleTokenValue('catalogNameField', $arrEntity);
+            $strDescription = $this->getSimpleTokenValue('catalogDescriptionField', $arrEntity);
+            $strUrl = $this->getSimpleTokenValue('catalogUrlField', $arrEntity);
+
+            $objEvent = new \Eluceo\iCal\Domain\Entity\Event();
+            $objEvent->setSummary($strSummary ?: '');
+            $objEvent->setLocation(new \Eluceo\iCal\Domain\ValueObject\Location(($strLocation?:''), $strSummary));
+            $objEvent->setDescription($strDescription ?: '');
+
+            if ($strUrl) {
+                $objEvent->addAttachment(new \Eluceo\iCal\Domain\ValueObject\Attachment(new \Eluceo\iCal\Domain\ValueObject\Uri($strUrl)));
             }
-            $arrData['END:VEVENT'] = '';
 
-            $arrIcsData[] = $arrData;
+            if ($strStart && !$strEnd) {
+                $objEvent->setOccurrence(new \Eluceo\iCal\Domain\ValueObject\SingleDay($this->getDate('catalogStartDateField', $arrEntity, true)));
+            }
+
+            if ($strStart && $strEnd) {
+                $objEvent->setOccurrence(new \Eluceo\iCal\Domain\ValueObject\TimeSpan($this->getDate('catalogStartDateField', $arrEntity, false), $objEndDate = $this->getDate('catalogEndDateField', $arrEntity, false)));
+            }
+
+            $arrIcsData[] = $objEvent;
         }
 
-        $strFile =
-            "BEGIN:VCALENDAR" . "\r\n" .
-            "VERSION:2.0" . "\r\n".
-            "PRODID://catalog_manager//catalog_manager.org//DE" . "\r\n";
-
-        foreach ($arrIcsData as $arrIcs) {
-            foreach ($arrIcs as $strType => $strValue) {
-                $strFile .= $strType . $strValue . "\r\n";
-            }
+        $objCalendar = new \Eluceo\iCal\Domain\Entity\Calendar($arrIcsData);
+        if ($strTimeZone = \Config::get('timeZone')) {
+            $objCalendar->addTimeZone(\Eluceo\iCal\Domain\Entity\TimeZone::createFromPhpDateTimeZone(new \DateTimeZone($strTimeZone),\DateTimeImmutable::createFromFormat('Y', '1970'), \DateTimeImmutable::createFromFormat('Y', '1970')));
         }
 
-        $strFile .= 'END:VCALENDAR';
-
-        return $strFile;
+        return (new \Eluceo\iCal\Presentation\Factory\CalendarFactory())->createCalendar($objCalendar);
     }
 
-    private function getDate($strField, $arrEntity, $strType) {
+    private function getDate($strField, $arrEntity, $blnSingleDay=true) {
 
         $strDate = $arrEntity[$this->{$strField}] ?: '';
+
         if (!$strDate) {
-            return '';
+            return null;
         }
-        if (\Validator::isDate($strDate)) {
-            $objDate = new \Date($strDate);
-            return date('Ymd\THis', ($objDate->{$strType}+5400));
-        }
-        if (\Validator::isDatim($strDate)) {
-            $objDate = new \Date($strDate);
-            return date('Ymd\THis', $objDate->tstamp);
-        }
-        return '';
+
+        $blnDateTime = \Validator::isDatim($strDate);
+        $strFormat = $blnDateTime ? \Config::get('datimFormat') : \Config::get('dateFormat');
+
+        return $blnSingleDay ? new \Eluceo\iCal\Domain\ValueObject\Date(\DateTimeImmutable::createFromFormat($strFormat, $strDate)) : new \Eluceo\iCal\Domain\ValueObject\DateTime(\DateTimeImmutable::createFromFormat($strFormat, $strDate), true);
     }
 
     private function getSimpleTokenValue($strField, $arrEntity) {
