@@ -99,11 +99,10 @@ class IcsExportModule extends \Module {
 
         foreach ($this->arrEntities as $arrEntity) {
 
-            $strStart = $arrEntity[$this->catalogStartDateField];
-            $strEnd = $arrEntity[$this->catalogEndDateField];
-
+            $strStart = $arrEntity[$this->catalogStartDateField] ? (new \Date($arrEntity[$this->catalogStartDateField]))->tstamp : 0;
             if (!$strStart) continue;
 
+            $strEnd = $arrEntity[$this->catalogEndDateField] ? (new \Date($arrEntity[$this->catalogEndDateField]))->tstamp : (new \Date($strStart))->dayEnd;
             $strLocation = $this->getSimpleTokenValue('catalogLocationField', $arrEntity);
             $strSummary = $this->getSimpleTokenValue('catalogNameField', $arrEntity);
             $strDescription = $this->getSimpleTokenValue('catalogDescriptionField', $arrEntity);
@@ -118,13 +117,19 @@ class IcsExportModule extends \Module {
                 $objEvent->addAttachment(new \Eluceo\iCal\Domain\ValueObject\Attachment(new \Eluceo\iCal\Domain\ValueObject\Uri($strUrl)));
             }
 
-            if ($strStart && !$strEnd) {
-                $objEvent->setOccurrence(new \Eluceo\iCal\Domain\ValueObject\SingleDay($this->getDate('catalogStartDateField', $arrEntity, true)));
-            }
+            $objDateTimeZone = new \DateTimeZone('Europe/Berlin');
+            $objOccurenceStart = new \Eluceo\iCal\Domain\ValueObject\DateTime(\DateTime::createFromFormat('d.m.Y - H:i:s', date('d.m.Y - H:i:s', $strStart), $objDateTimeZone), true);
+            $objOccurenceEnd = new \Eluceo\iCal\Domain\ValueObject\DateTime(\DateTime::createFromFormat('d.m.Y - H:i:s', date('d.m.Y - H:i:s', $strEnd), $objDateTimeZone), true);
+            $objOccurrence = new \Eluceo\iCal\Domain\ValueObject\TimeSpan($objOccurenceStart, $objOccurenceEnd);
+            $objEvent->setOccurrence($objOccurrence);
 
-            if ($strStart && $strEnd) {
+            /*
+            if (!$strEnd) {
+                $objEvent->setOccurrence(new \Eluceo\iCal\Domain\ValueObject\SingleDay($this->getDate('catalogStartDateField', $arrEntity, true)));
+            } else {
                 $objEvent->setOccurrence(new \Eluceo\iCal\Domain\ValueObject\TimeSpan($this->getDate('catalogStartDateField', $arrEntity, false), $objEndDate = $this->getDate('catalogEndDateField', $arrEntity, false)));
             }
+            */
 
             $arrIcsData[] = $objEvent;
         }
@@ -137,6 +142,7 @@ class IcsExportModule extends \Module {
         return (new \Eluceo\iCal\Presentation\Factory\CalendarFactory())->createCalendar($objCalendar);
     }
 
+    /*
     private function getDate($strField, $arrEntity, $blnSingleDay=true) {
 
         $strDate = $arrEntity[$this->{$strField}] ?: '';
@@ -150,6 +156,7 @@ class IcsExportModule extends \Module {
 
         return $blnSingleDay ? new \Eluceo\iCal\Domain\ValueObject\Date(\DateTimeImmutable::createFromFormat($strFormat, $strDate)) : new \Eluceo\iCal\Domain\ValueObject\DateTime(\DateTimeImmutable::createFromFormat($strFormat, $strDate), true);
     }
+    */
 
     private function getSimpleTokenValue($strField, $arrEntity) {
 
