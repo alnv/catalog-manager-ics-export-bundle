@@ -27,7 +27,8 @@
   "require": {
     "php":">=8.0",
     "eluceo/ical": "^2.14",
-    "contao/core-bundle": "~5.0"
+    "contao/core-bundle": "~5.0",
+    "alnv/catalog-manager":"^2.0"
   },
   "config": {
     "preferred-install": "dist"

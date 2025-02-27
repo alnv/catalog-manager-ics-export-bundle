@@ -19,6 +19,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Eluceo\iCal\Domain\ValueObject\DateTime;
 use Eluceo\iCal\Domain\ValueObject\TimeSpan;
 use Eluceo\iCal\Presentation\Factory\CalendarFactory;
+use Alnv\CatalogManagerBundle\Toolkit;
+use Alnv\CatalogManagerBundle\CatalogView;
 
 class IcsExportModule extends Module
 {
@@ -51,8 +53,6 @@ class IcsExportModule extends Module
         }
 
         global $objPage;
-
-        $this->import('CatalogInput');
 
         $this->strToken = \md5($this->id);
         $arrActiveParams = \explode(',', $this->catalogActiveParameters);
@@ -102,9 +102,9 @@ class IcsExportModule extends Module
 
         $this->arrData['catalogUseArray'] = '1';
         $this->arrData['catalogFastMode'] = '1';
-        $this->arrData['catalogExcludeArrayOptions'] = \serialize(\CatalogManager\Toolkit::$arrArrayOptions);
+        $this->arrData['catalogExcludeArrayOptions'] = \serialize(Toolkit::$arrArrayOptions);
 
-        $objView = new \CatalogManager\CatalogView();
+        $objView = new CatalogView();
         $objView->strMode = 'view';
         $objView->arrOptions = $this->arrData;
         $objView->objMainTemplate = $this->Template;

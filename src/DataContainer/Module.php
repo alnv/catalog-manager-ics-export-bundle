@@ -4,6 +4,8 @@ namespace Alnv\CatalogManagerIcsExportBundle\DataContainer;
 
 use Contao\DataContainer;
 use Contao\Database;
+use Alnv\CatalogManagerBundle\Toolkit;
+use Alnv\CatalogManagerBundle\CatalogFieldBuilder;
 
 class Module
 {
@@ -50,7 +52,7 @@ class Module
             return $arrReturn;
         }
 
-        $objFieldBuilder = new \CatalogManager\CatalogFieldBuilder();
+        $objFieldBuilder = new CatalogFieldBuilder();
         $objFieldBuilder->initialize($objDataContainer->activeRecord->catalogTablename);
         $arrFields = $objFieldBuilder->getCatalogFields(true, null);
 
@@ -60,7 +62,7 @@ class Module
             if (!in_array($arrField['type'], ['select', 'radio'])) continue;
             if (!$arrField['optionsType'] || $arrField['optionsType'] == 'useOptions') continue;
 
-            $arrReturn[$strFieldname] = \CatalogManager\Toolkit::getLabelValue($arrField['_dcFormat']['label'], $strFieldname);
+            $arrReturn[$strFieldname] = Toolkit::getLabelValue($arrField['_dcFormat']['label'], $strFieldname);
         }
 
         return $arrReturn;
@@ -89,7 +91,7 @@ class Module
             return $arrReturn;
         }
 
-        $objFieldBuilder = new \CatalogManager\CatalogFieldBuilder();
+        $objFieldBuilder = new CatalogFieldBuilder();
         $objFieldBuilder->initialize($objDataContainer->activeRecord->catalogTablename);
         $arrFields = $objFieldBuilder->getCatalogFields(true, null);
 
@@ -97,9 +99,9 @@ class Module
 
             if (is_numeric($strFieldname)) continue;
             if (in_array($arrFields['type'], ['upload', 'dbColumn'])) continue;
-            if (in_array($arrFields['type'], \CatalogManager\Toolkit::excludeFromDc())) continue;
+            if (in_array($arrFields['type'], Toolkit::excludeFromDc())) continue;
 
-            $arrReturn[$strFieldname] = \CatalogManager\Toolkit::getLabelValue($arrField['_dcFormat']['label'], $strFieldname);
+            $arrReturn[$strFieldname] = Toolkit::getLabelValue($arrField['_dcFormat']['label'], $strFieldname);
         }
 
         return $arrReturn;
