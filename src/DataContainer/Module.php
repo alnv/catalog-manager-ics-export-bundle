@@ -2,104 +2,104 @@
 
 namespace Alnv\CatalogManagerIcsExportBundle\DataContainer;
 
+use Contao\DataContainer;
+use Contao\Database;
 
-class Module {
+class Module
+{
 
+    public function customizeIcaPalettes(DataContainer $objDataContainer = null)
+    {
 
-    public function customizeIcaPalettes( \DataContainer $objDataContainer = null ) {
-
-        if ( !$objDataContainer ) {
-
+        if (!$objDataContainer) {
             return null;
         }
 
-        $objDatabase = \Database::getInstance();
-        $objActiveRecord = $objDatabase->prepare( 'SELECT * FROM tl_module WHERE id = ?' )->execute( $objDataContainer->id );
+        $objDatabase = Database::getInstance();
+        $objActiveRecord = $objDatabase->prepare('SELECT * FROM tl_module WHERE id = ?')->execute($objDataContainer->id);
 
-        if ( !$objActiveRecord->numRows ) {
-
+        if (!$objActiveRecord->numRows) {
             return null;
         }
 
-        if ( $objActiveRecord->type == 'icsExport' ) {
-
+        if ($objActiveRecord->type == 'icsExport') {
             $GLOBALS['TL_DCA']['tl_module']['subpalettes']['catalogUseMasterPage'] = 'catalogMasterPage';
-            $GLOBALS['TL_DCA']['tl_module']['fields']['catalogJoinFields']['options_callback'] = [ 'ics.export.datacontainer', 'getJoinAbleFields' ];
+            $GLOBALS['TL_DCA']['tl_module']['fields']['catalogJoinFields']['options_callback'] = ['ics.export.datacontainer', 'getJoinAbleFields'];
             $GLOBALS['TL_DCA']['tl_module']['fields']['catalogActiveParameters']['label'] = $GLOBALS['TL_LANG']['tl_module']['icsExportActiveParameters'];
         }
     }
 
 
-    public function getJoinAbleFields( \DataContainer $objDataContainer = null ) {
+    public function getJoinAbleFields(DataContainer $objDataContainer = null)
+    {
 
         $arrReturn = [];
 
-        if ( !$objDataContainer ) {
+        if (!$objDataContainer) {
+            return $arrReturn;
+        }
+
+        $objDatabase = Database::getInstance();
+
+        if (!$objDataContainer->activeRecord->catalogTablename) {
 
             return $arrReturn;
         }
 
-        $objDatabase = \Database::getInstance();
-
-        if ( !$objDataContainer->activeRecord->catalogTablename ) {
-
-            return $arrReturn;
-        }
-
-        if ( !$objDatabase->tableExists( $objDataContainer->activeRecord->catalogTablename ) ) {
-
+        if (!$objDatabase->tableExists($objDataContainer->activeRecord->catalogTablename)) {
             return $arrReturn;
         }
 
         $objFieldBuilder = new \CatalogManager\CatalogFieldBuilder();
-        $objFieldBuilder->initialize( $objDataContainer->activeRecord->catalogTablename );
-        $arrFields = $objFieldBuilder->getCatalogFields( true, null );
+        $objFieldBuilder->initialize($objDataContainer->activeRecord->catalogTablename);
+        $arrFields = $objFieldBuilder->getCatalogFields(true, null);
 
-        foreach ( $arrFields as $strFieldname => $arrField ) {
+        foreach ($arrFields as $strFieldname => $arrField) {
 
-            if ( $arrField['multiple'] ) continue;
-            if ( !in_array( $arrField['type'], [ 'select', 'radio' ] ) ) continue;
-            if ( !$arrField['optionsType'] || $arrField['optionsType'] == 'useOptions' ) continue;
+            if ($arrField['multiple']) continue;
+            if (!in_array($arrField['type'], ['select', 'radio'])) continue;
+            if (!$arrField['optionsType'] || $arrField['optionsType'] == 'useOptions') continue;
 
-            $arrReturn[ $strFieldname ] = \CatalogManager\Toolkit::getLabelValue( $arrField['_dcFormat']['label'], $strFieldname );
+            $arrReturn[$strFieldname] = \CatalogManager\Toolkit::getLabelValue($arrField['_dcFormat']['label'], $strFieldname);
         }
 
         return $arrReturn;
     }
 
 
-    public function getFields( \DataContainer $objDataContainer = null ) {
+    public function getFields(DataContainer $objDataContainer = null)
+    {
 
         $arrReturn = [];
 
-        if ( !$objDataContainer ) {
+        if (!$objDataContainer) {
 
             return $arrReturn;
         }
 
-        $objDatabase = \Database::getInstance();
+        $objDatabase = Database::getInstance();
 
-        if ( !$objDataContainer->activeRecord->catalogTablename ) {
+        if (!$objDataContainer->activeRecord->catalogTablename) {
 
             return $arrReturn;
         }
 
-        if ( !$objDatabase->tableExists( $objDataContainer->activeRecord->catalogTablename ) ) {
+        if (!$objDatabase->tableExists($objDataContainer->activeRecord->catalogTablename)) {
 
             return $arrReturn;
         }
 
         $objFieldBuilder = new \CatalogManager\CatalogFieldBuilder();
-        $objFieldBuilder->initialize( $objDataContainer->activeRecord->catalogTablename );
-        $arrFields = $objFieldBuilder->getCatalogFields( true, null );
+        $objFieldBuilder->initialize($objDataContainer->activeRecord->catalogTablename);
+        $arrFields = $objFieldBuilder->getCatalogFields(true, null);
 
-        foreach ( $arrFields as $strFieldname => $arrField ) {
+        foreach ($arrFields as $strFieldname => $arrField) {
 
-            if ( is_numeric( $strFieldname ) ) continue;
-            if ( in_array( $arrFields['type'], [ 'upload', 'dbColumn' ] ) ) continue;
-            if ( in_array( $arrFields['type'], \CatalogManager\Toolkit::excludeFromDc() ) ) continue;
+            if (is_numeric($strFieldname)) continue;
+            if (in_array($arrFields['type'], ['upload', 'dbColumn'])) continue;
+            if (in_array($arrFields['type'], \CatalogManager\Toolkit::excludeFromDc())) continue;
 
-            $arrReturn[ $strFieldname ] = \CatalogManager\Toolkit::getLabelValue( $arrField['_dcFormat']['label'], $strFieldname );
+            $arrReturn[$strFieldname] = \CatalogManager\Toolkit::getLabelValue($arrField['_dcFormat']['label'], $strFieldname);
         }
 
         return $arrReturn;

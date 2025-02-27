@@ -1,10 +1,16 @@
+<?php
+
+use Contao\System;
+
+?>
 <?php $this->extend('block_unsearchable'); ?>
 <?php $this->block('content'); ?>
-<form method="POST">
-    <input type="hidden" name="ICS_DOWNLOAD" value="<?= $this->token ?>">
-    <input type="hidden" name="REQUEST_TOKEN" value="{{request_token}}">
-    <div class="submit_container">
-        <button type="submit" class="submit" <?= ( $this->active ? '' : 'disabled' ) ?>><?= $this->button ?></button>
-    </div>
-</form>
+    <form method="POST">
+        <input type="hidden" name="ICS_DOWNLOAD" value="<?= $this->token ?>">
+        <input type="hidden" name="REQUEST_TOKEN"
+               value="<?= System::getContainer()->get('contao.csrf.token_manager')->getDefaultTokenValue() ?>">
+        <div class="submit_container">
+            <button type="submit" class="submit" <?= ($this->active ? '' : 'disabled') ?>><?= $this->button ?></button>
+        </div>
+    </form>
 <?php $this->endblock(); ?>

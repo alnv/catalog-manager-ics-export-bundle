@@ -1,10 +1,10 @@
 <?php
 
+use Contao\ArrayUtil;
+use Alnv\CatalogManagerIcsExportBundle\Modules\IcsExportModule;
 
-array_insert( $GLOBALS['FE_MOD'], 3, [
-
+ArrayUtil::arrayInsert($GLOBALS['FE_MOD'], 3, [
     'ics-export' => [
-
-        'icsExport' => 'Alnv\CatalogManagerIcsExportBundle\Modules\IcsExportModule'
+        'icsExport' => IcsExportModule::class
     ]
 ]);
