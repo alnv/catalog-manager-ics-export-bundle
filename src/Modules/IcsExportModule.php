@@ -2,25 +2,27 @@
 
 namespace Alnv\CatalogManagerIcsExportBundle\Modules;
 
+use Alnv\CatalogManagerBundle\CatalogView;
+use Alnv\CatalogManagerBundle\Toolkit;
+use Contao\BackendTemplate;
+use Contao\Config;
+use Contao\Date;
 use Contao\Input;
 use Contao\Module;
-use Contao\System;
-use Contao\Date;
-use Contao\Config;
 use Contao\StringUtil;
-use Contao\BackendTemplate;
+use Contao\System;
 use Eluceo\iCal\Domain\Entity\Calendar;
-use Eluceo\iCal\Domain\Entity\TimeZone;
 use Eluceo\iCal\Domain\Entity\Event;
-use Eluceo\iCal\Domain\ValueObject\Uri;
-use Eluceo\iCal\Domain\ValueObject\Location;
+use Eluceo\iCal\Domain\Entity\TimeZone;
 use Eluceo\iCal\Domain\ValueObject\Attachment;
-use Symfony\Component\HttpFoundation\Request;
 use Eluceo\iCal\Domain\ValueObject\DateTime;
+use Eluceo\iCal\Domain\ValueObject\Location;
+use Eluceo\iCal\Domain\ValueObject\SingleDay;
 use Eluceo\iCal\Domain\ValueObject\TimeSpan;
+use Eluceo\iCal\Domain\ValueObject\Uri;
+use Eluceo\iCal\Domain\ValueObject\Date as EluceoDate;
 use Eluceo\iCal\Presentation\Factory\CalendarFactory;
-use Alnv\CatalogManagerBundle\Toolkit;
-use Alnv\CatalogManagerBundle\CatalogView;
+use Symfony\Component\HttpFoundation\Request;
 
 class IcsExportModule extends Module
 {
@@ -76,12 +78,15 @@ class IcsExportModule extends Module
             $strFilename = $objPage->alias;
 
             if ($this->catalogICalFileName) {
-                $strFilename = $objParser->replaceInline((string) $this->catalogICalFileName);
+                $strFilename = $objParser->replaceInline((string)$this->catalogICalFileName);
                 $strFilename = StringUtil::standardize($strFilename, false);
             }
 
             \header('Content-Type: text/calendar; charset=utf-8');
             \header('Content-Disposition: attachment; filename="' . $strFilename . '.ics"');
+
+            \ob_end_clean();
+            \ob_start();
 
             echo $this->createIcsFile();
             exit;
@@ -142,11 +147,15 @@ class IcsExportModule extends Module
                 $objEvent->addAttachment(new Attachment(new Uri($strUrl)));
             }
 
-            $objDateTimeZone = new \DateTimeZone('Europe/Berlin');
-            $objOccurenceStart = new DateTime(\DateTime::createFromFormat('d.m.Y - H:i:s', date('d.m.Y - H:i:s', $strStart), $objDateTimeZone), true);
-            $objOccurenceEnd = new DateTime(\DateTime::createFromFormat('d.m.Y - H:i:s', date('d.m.Y - H:i:s', $strEnd), $objDateTimeZone), true);
-            $objOccurrence = new TimeSpan($objOccurenceStart, $objOccurenceEnd);
-            $objEvent->setOccurrence($objOccurrence);
+            if ($strStart !== $strEnd) {
+                $objDateTimeZone = new \DateTimeZone('Europe/Berlin');
+                $objOccurenceStart = new DateTime(\DateTime::createFromFormat('Y-m-d - H:i:s', date('Y-m-d - H:i:s', $strStart), $objDateTimeZone), true);
+                $objOccurenceEnd = new DateTime(\DateTime::createFromFormat('Y-m-d - H:i:s', date('Y-m-d - H:i:s', $strEnd), $objDateTimeZone), true);
+                $objOccurrence = new TimeSpan($objOccurenceStart, $objOccurenceEnd);
+                $objEvent->setOccurrence($objOccurrence);
+            } else {
+                $objEvent->setOccurrence(new SingleDay(new EluceoDate(\DateTimeImmutable::createFromFormat('Y-m-d', $strStart))));
+            }
 
             $arrIcsData[] = $objEvent;
         }
